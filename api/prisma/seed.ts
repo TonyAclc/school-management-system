@@ -25,9 +25,9 @@ async function main() {
   console.log('Roles seeded.');
 
   // 2. Upsert Admin User
-  const adminEmail = 'admin@example.com';
-  // Use a default password hash for 'ChangeMe123!' (BCRYPT_ROUNDS=12)
-  const passwordHash = await bcrypt.hash('ChangeMe123!', 12);
+  const adminEmail = 'admin@school.com';
+  // Use a default password hash for 'admin123' (BCRYPT_ROUNDS=12)
+  const passwordHash = await bcrypt.hash('admin123', 12);
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },

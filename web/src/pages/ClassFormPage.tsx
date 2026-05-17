@@ -81,8 +81,8 @@ export const ClassFormPage = () => {
       <div style={{ backgroundColor: 'var(--color-bg-elevated)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)' }}>
         <form onSubmit={onSubmit} noValidate>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <FormField label="Grade / Class Name" htmlFor="gradeLevel" error={errors.gradeLevel?.message} required>
-              <Input id="gradeLevel" placeholder="Grade 10 - A" invalid={!!errors.gradeLevel} {...register('gradeLevel')} />
+            <FormField label="Course / Section" htmlFor="gradeLevel" error={errors.gradeLevel?.message} required>
+              <Input id="gradeLevel" placeholder="BSIT-1A" invalid={!!errors.gradeLevel} {...register('gradeLevel')} />
             </FormField>
 
             <FormField label="Academic Year" htmlFor="academicYear" error={errors.academicYear?.message} required>
@@ -90,7 +90,7 @@ export const ClassFormPage = () => {
             </FormField>
           </div>
 
-          <FormField label="Homeroom Teacher (Optional)" htmlFor="homeroomTeacherId" error={errors.homeroomTeacherId?.message}>
+          <FormField label="Course Adviser (Optional)" htmlFor="homeroomTeacherId" error={errors.homeroomTeacherId?.message}>
             <select 
               id="homeroomTeacherId" 
               {...register('homeroomTeacherId')}

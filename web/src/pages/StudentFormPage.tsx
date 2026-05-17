@@ -82,48 +82,48 @@ export const StudentFormPage = () => {
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Student Details</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <FormField label="First Name" htmlFor="firstName" error={errors.firstName?.message} required>
-              <Input id="firstName" placeholder="John" invalid={!!errors.firstName} {...register('firstName')} />
+              <Input id="firstName" invalid={!!errors.firstName} {...register('firstName')} />
             </FormField>
 
             <FormField label="Last Name" htmlFor="lastName" error={errors.lastName?.message} required>
-              <Input id="lastName" placeholder="Doe" invalid={!!errors.lastName} {...register('lastName')} />
+              <Input id="lastName" invalid={!!errors.lastName} {...register('lastName')} />
             </FormField>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <FormField label="Student Number" htmlFor="studentNumber" error={errors.studentNumber?.message} required>
-              <Input id="studentNumber" placeholder="STU-2026-001" invalid={!!errors.studentNumber} {...register('studentNumber')} />
+              <Input id="studentNumber" invalid={!!errors.studentNumber} {...register('studentNumber')} />
             </FormField>
 
             <FormField label="Email" htmlFor="email" error={errors.email?.message} required>
-              <Input id="email" type="email" placeholder="john.doe@example.com" invalid={!!errors.email} {...register('email')} />
+              <Input id="email" type="email" invalid={!!errors.email} {...register('email')} />
             </FormField>
           </div>
 
           {!isEditing && (
             <FormField label="Password" htmlFor="password" error={errors.password?.message} required>
-              <PasswordInput id="password" placeholder="••••••••" invalid={!!errors.password} {...register('password')} />
+              <PasswordInput id="password" invalid={!!errors.password} {...register('password')} />
             </FormField>
           )}
 
           <FormField label="Student Phone (Optional)" htmlFor="phone" error={errors.phone?.message}>
-            <Input id="phone" placeholder="+1234567890" invalid={!!errors.phone} {...register('phone')} />
+            <Input id="phone" invalid={!!errors.phone} {...register('phone')} />
           </FormField>
 
           <hr style={{ margin: 'var(--space-6) 0', border: 'none', borderTop: '1px solid var(--color-bg-muted)' }} />
 
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Guardian Details</h2>
           <FormField label="Guardian Name" htmlFor="guardianName" error={errors.guardianName?.message}>
-            <Input id="guardianName" placeholder="Jane Doe" invalid={!!errors.guardianName} {...register('guardianName')} />
+            <Input id="guardianName" invalid={!!errors.guardianName} {...register('guardianName')} />
           </FormField>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <FormField label="Guardian Phone" htmlFor="guardianPhone" error={errors.guardianPhone?.message}>
-              <Input id="guardianPhone" placeholder="+1234567890" invalid={!!errors.guardianPhone} {...register('guardianPhone')} />
+              <Input id="guardianPhone" invalid={!!errors.guardianPhone} {...register('guardianPhone')} />
             </FormField>
 
             <FormField label="Guardian Email" htmlFor="guardianEmail" error={errors.guardianEmail?.message}>
-              <Input id="guardianEmail" type="email" placeholder="jane.doe@example.com" invalid={!!errors.guardianEmail} {...register('guardianEmail')} />
+              <Input id="guardianEmail" type="email" invalid={!!errors.guardianEmail} {...register('guardianEmail')} />
             </FormField>
           </div>
 

@@ -3,8 +3,8 @@ import { useClassesList, useClassEnrollments } from '../features/classes/hooks/u
 import { useSubjectsList } from '../features/subjects/hooks/useSubjects';
 import { useGrades, useBulkUpsertGrades } from '../features/grades/hooks/useGrades';
 import { Button } from '../components/Button';
-import { FormField } from '../components/FormField';
 import { Input } from '../components/Input';
+import { PageHeader } from '../components/PageHeader';
 import { toast } from '../store/toast-store';
 import { errorMessage } from '../lib/api-error';
 
@@ -15,16 +15,9 @@ export const GradesPage = () => {
   const [term, setTerm] = useState('First Semester');
   const [maxScore, setMaxScore] = useState(100);
 
-  // Fetch classes for dropdown
   const { data: classesData, isLoading: classesLoading } = useClassesList({ page: 1, pageSize: 100, sortBy: 'gradeLevel', sortOrder: 'asc' });
-  
-  // Fetch subjects for dropdown
   const { data: subjectsData, isLoading: subjectsLoading } = useSubjectsList({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' });
-
-  // Fetch enrolled students for the selected class
   const { data: enrollments, isLoading: enrollmentsLoading } = useClassEnrollments(selectedClass);
-  
-  // Fetch existing grades for the selected subject, year, term
   const { data: gradesData, isLoading: gradesLoading } = useGrades({
     subjectId: selectedSubject || undefined,
     academicYear: academicYear || undefined,
@@ -33,48 +26,28 @@ export const GradesPage = () => {
 
   const { mutateAsync: saveGrades, isPending: isSaving } = useBulkUpsertGrades();
 
-  // Local state for the grades form: Record<studentId, { score: number | string }>
   const [gradesForm, setGradesForm] = useState<Record<string, { score: number | string }>>({});
 
-  // Sync existing grades into the local form state
   useEffect(() => {
     if (enrollments && !gradesLoading) {
       const newFormState: typeof gradesForm = {};
-      
-      // Keep track if we found any maxScore to update the global maxScore state
       let foundMaxScore = null;
-
       enrollments.forEach(enrollment => {
-        // Find existing record if it exists
         const existingRecord = gradesData?.find(g => g.studentId === enrollment.studentId);
-        
         if (existingRecord) {
-          newFormState[enrollment.studentId] = {
-            score: existingRecord.score,
-          };
+          newFormState[enrollment.studentId] = { score: existingRecord.score };
           foundMaxScore = existingRecord.maxScore;
         } else {
-          newFormState[enrollment.studentId] = {
-            score: '',
-          };
+          newFormState[enrollment.studentId] = { score: '' };
         }
       });
-      
       setGradesForm(newFormState);
-      if (foundMaxScore !== null) {
-        setMaxScore(foundMaxScore as number);
-      }
+      if (foundMaxScore !== null) setMaxScore(foundMaxScore as number);
     }
   }, [enrollments, gradesData, gradesLoading]);
 
   const handleScoreChange = (studentId: string, val: string) => {
-    setGradesForm(prev => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        score: val,
-      }
-    }));
+    setGradesForm(prev => ({ ...prev, [studentId]: { ...prev[studentId], score: val } }));
   };
 
   const handleSave = async () => {
@@ -82,14 +55,9 @@ export const GradesPage = () => {
       toast.error('Please fill in all required fields');
       return;
     }
-
-    // Filter out empty scores and parse them to numbers
     const records = Object.entries(gradesForm)
       .filter(([_, data]) => data.score !== '')
-      .map(([studentId, data]) => ({
-        studentId,
-        score: parseFloat(data.score as string),
-      }))
+      .map(([studentId, data]) => ({ studentId, score: parseFloat(data.score as string) }))
       .filter(record => !isNaN(record.score));
 
     if (records.length === 0) {
@@ -98,13 +66,7 @@ export const GradesPage = () => {
     }
 
     try {
-      await saveGrades({
-        subjectId: selectedSubject,
-        academicYear,
-        term,
-        maxScore,
-        records,
-      });
+      await saveGrades({ subjectId: selectedSubject, academicYear, term, maxScore, records });
       toast.success('Grades saved successfully');
     } catch (err) {
       toast.error(errorMessage(err));
@@ -113,123 +75,326 @@ export const GradesPage = () => {
 
   const areFiltersComplete = selectedClass && selectedSubject && academicYear && term;
 
+  const selectStyle: React.CSSProperties = {
+    width: '100%',
+    padding: 'var(--space-2) var(--space-3)',
+    borderRadius: 'var(--radius-lg)',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg)',
+    fontSize: 'var(--font-size-sm)',
+    color: 'var(--color-fg)',
+    fontFamily: 'var(--font-sans)',
+    outline: 'none',
+    transition: 'border-color var(--duration-fast)',
+    cursor: 'pointer',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 'var(--font-size-xs)',
+    fontWeight: 'var(--font-weight-semibold)' as any,
+    color: 'var(--color-fg-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: 'var(--space-2)',
+  };
+
+  // Grade color coding
+  const getScoreColor = (score: number | string) => {
+    const num = typeof score === 'string' ? parseFloat(score) : score;
+    if (isNaN(num) || score === '') return 'var(--color-fg)';
+    const pct = (num / maxScore) * 100;
+    if (pct >= 90) return '#10b981';
+    if (pct >= 75) return '#3b82f6';
+    if (pct >= 60) return '#f59e0b';
+    return '#ef4444';
+  };
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)' }}>Grades Entry</h1>
-      </div>
+      <PageHeader title="Grades Entry" subtitle="Enter and manage student grades by class and subject" icon="📝" />
 
-      {/* Controls Container */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', backgroundColor: 'var(--color-bg-elevated)', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-6)' }}>
-        <FormField label="Select Class" htmlFor="classId">
-          <select 
-            id="classId" 
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', fontSize: 'var(--font-size-md)', color: 'var(--color-fg)' }}
-            disabled={classesLoading}
-          >
-            <option value="">-- Choose a class --</option>
-            {classesData?.items.map(cls => (
-              <option key={cls.id} value={cls.id}>{cls.gradeLevel}</option>
-            ))}
-          </select>
-        </FormField>
+      {/* Filter Card */}
+      <div style={{
+        background: 'var(--color-bg-elevated)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-xl)',
+        padding: 'var(--space-6)',
+        marginBottom: 'var(--space-6)',
+        boxShadow: 'var(--shadow-card)',
+        animation: 'fadeIn var(--duration-base) var(--easing-decelerate)',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 'var(--space-5)',
+        }}>
+          <div>
+            <label style={labelStyle}>Class</label>
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              style={selectStyle}
+              disabled={classesLoading}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--color-accent)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--color-border)'; }}
+            >
+              <option value="">— Choose a class —</option>
+              {classesData?.items.map(cls => (
+                <option key={cls.id} value={cls.id}>{cls.gradeLevel}</option>
+              ))}
+            </select>
+          </div>
 
-        <FormField label="Select Subject" htmlFor="subjectId">
-          <select 
-            id="subjectId" 
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', fontSize: 'var(--font-size-md)', color: 'var(--color-fg)' }}
-            disabled={subjectsLoading}
-          >
-            <option value="">-- Choose a subject --</option>
-            {subjectsData?.items.map(sub => (
-              <option key={sub.id} value={sub.id}>{sub.name} ({sub.code})</option>
-            ))}
-          </select>
-        </FormField>
+          <div>
+            <label style={labelStyle}>Subject</label>
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              style={selectStyle}
+              disabled={subjectsLoading}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--color-accent)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--color-border)'; }}
+            >
+              <option value="">— Choose a subject —</option>
+              {subjectsData?.items.map(sub => (
+                <option key={sub.id} value={sub.id}>{sub.name} ({sub.code})</option>
+              ))}
+            </select>
+          </div>
 
-        <FormField label="Academic Year" htmlFor="academicYear">
-          <Input id="academicYear" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} placeholder="2026-2027" />
-        </FormField>
+          <div>
+            <label style={labelStyle}>Academic Year</label>
+            <Input
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              placeholder="2026-2027"
+              style={{ borderRadius: 'var(--radius-lg)' }}
+            />
+          </div>
 
-        <FormField label="Term / Semester" htmlFor="term">
-          <select 
-            id="term" 
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', fontSize: 'var(--font-size-md)', color: 'var(--color-fg)' }}
-          >
-            <option value="First Semester">First Semester</option>
-            <option value="Second Semester">Second Semester</option>
-            <option value="First Quarter">First Quarter</option>
-            <option value="Second Quarter">Second Quarter</option>
-            <option value="Third Quarter">Third Quarter</option>
-            <option value="Fourth Quarter">Fourth Quarter</option>
-            <option value="Final">Final</option>
-          </select>
-        </FormField>
+          <div>
+            <label style={labelStyle}>Term / Semester</label>
+            <select
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              style={selectStyle}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--color-accent)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--color-border)'; }}
+            >
+              <option value="First Semester">First Semester</option>
+              <option value="Second Semester">Second Semester</option>
+              <option value="First Quarter">First Quarter</option>
+              <option value="Second Quarter">Second Quarter</option>
+              <option value="Third Quarter">Third Quarter</option>
+              <option value="Fourth Quarter">Fourth Quarter</option>
+              <option value="Final">Final</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Grades Form */}
       {areFiltersComplete && (
-        <div style={{ backgroundColor: 'var(--color-bg-elevated)', padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)' }}>
+        <div style={{ animation: 'fadeInUp var(--duration-base) var(--easing-decelerate)' }}>
           {enrollmentsLoading || gradesLoading ? (
-            <p style={{ textAlign: 'center', color: 'var(--color-fg-muted)', padding: 'var(--space-6)' }}>Loading student records...</p>
+            <div style={{
+              background: 'var(--color-bg-elevated)',
+              borderRadius: 'var(--radius-xl)',
+              border: '1px solid var(--color-border)',
+              padding: 'var(--space-10)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: 'var(--space-3)', animation: 'pulse 1.5s infinite' }}>📝</div>
+              <p style={{ color: 'var(--color-fg-muted)' }}>Loading student records...</p>
+            </div>
           ) : enrollments?.length === 0 ? (
-            <p style={{ textAlign: 'center', color: 'var(--color-fg-muted)', padding: 'var(--space-6)' }}>No students enrolled in this class.</p>
+            <div style={{
+              background: 'var(--color-bg-elevated)',
+              borderRadius: 'var(--radius-xl)',
+              border: '1px solid var(--color-border)',
+              padding: 'var(--space-16)',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-card)',
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)', opacity: 0.6 }}>📭</div>
+              <p style={{ color: 'var(--color-fg-muted)' }}>No students enrolled in this class.</p>
+            </div>
           ) : (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-                <h2 style={{ fontSize: 'var(--font-size-lg)' }}>Enrolled Students ({enrollments?.length})</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <label htmlFor="maxScore" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>Max Score:</label>
-                  <Input 
-                    id="maxScore" 
-                    type="number" 
-                    value={maxScore} 
-                    onChange={(e) => setMaxScore(parseInt(e.target.value) || 100)} 
-                    style={{ width: '80px' }} 
+            <div style={{
+              background: 'var(--color-bg-elevated)',
+              borderRadius: 'var(--radius-xl)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-card)',
+              overflow: 'hidden',
+            }}>
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: 'var(--space-5) var(--space-6)',
+                borderBottom: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-subtle)',
+              }}>
+                <div>
+                  <h2 style={{
+                    fontSize: 'var(--font-size-lg)',
+                    fontWeight: 'var(--font-weight-semibold)' as any,
+                    color: 'var(--color-fg)',
+                    margin: 0,
+                  }}>
+                    Score Sheet
+                    <span style={{
+                      marginLeft: 'var(--space-2)',
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-accent)',
+                      fontWeight: 'var(--font-weight-medium)' as any,
+                    }}>
+                      ({enrollments?.length} students)
+                    </span>
+                  </h2>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <label style={{
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 'var(--font-weight-semibold)' as any,
+                    color: 'var(--color-fg-muted)',
+                    textTransform: 'uppercase' as const,
+                    letterSpacing: '0.05em',
+                  }}>
+                    Max Score:
+                  </label>
+                  <Input
+                    type="number"
+                    value={maxScore}
+                    onChange={(e) => setMaxScore(parseInt(e.target.value) || 100)}
+                    style={{ width: 80, borderRadius: 'var(--radius-lg)', textAlign: 'center' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                {enrollments?.map(enrollment => {
+              {/* Table header */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 200px',
+                padding: 'var(--space-3) var(--space-6)',
+                borderBottom: '2px solid var(--color-border)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 'var(--font-weight-semibold)' as any,
+                color: 'var(--color-fg-muted)',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.05em',
+              }}>
+                <span>Student</span>
+                <span style={{ textAlign: 'center' }}>Score</span>
+              </div>
+
+              {/* Student rows */}
+              <div>
+                {enrollments?.map((enrollment, idx) => {
                   const studentId = enrollment.studentId;
                   const record = gradesForm[studentId] || { score: '' };
                   const studentName = `${enrollment.student?.user.firstName} ${enrollment.student?.user.lastName}`;
-                  
+
                   return (
-                    <div key={studentId} style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 'var(--space-4)', alignItems: 'center', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                      <div>
-                        <div style={{ fontWeight: 'var(--font-weight-medium)' }}>{studentName}</div>
-                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-fg-muted)' }}>{enrollment.student?.studentNumber}</div>
+                    <div key={studentId} style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 200px',
+                      gap: 'var(--space-4)',
+                      alignItems: 'center',
+                      padding: 'var(--space-3) var(--space-6)',
+                      borderBottom: idx < (enrollments?.length || 0) - 1 ? '1px solid var(--color-border)' : 'none',
+                      animation: `fadeIn var(--duration-fast) var(--easing-decelerate) both`,
+                      animationDelay: `${idx * 30}ms`,
+                      transition: 'background-color var(--duration-fast)',
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-bg-subtle)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                        <div style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 'var(--radius-full)',
+                          background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.6875rem',
+                          fontWeight: 'var(--font-weight-bold)' as any,
+                          color: 'white',
+                          flexShrink: 0,
+                        }}>
+                          {enrollment.student?.user.firstName?.[0]}{enrollment.student?.user.lastName?.[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 'var(--font-weight-medium)' as any, fontSize: 'var(--font-size-sm)' }}>
+                            {studentName}
+                          </div>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-fg-muted)' }}>
+                            {enrollment.student?.studentNumber}
+                          </div>
+                        </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                        <Input 
-                          type="number" 
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)' }}>
+                        <input
+                          type="number"
                           step="0.01"
-                          placeholder="Score" 
+                          placeholder="—"
                           value={record.score}
                           onChange={(e) => handleScoreChange(studentId, e.target.value)}
+                          style={{
+                            width: 80,
+                            padding: '6px 10px',
+                            fontSize: 'var(--font-size-base)',
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: 'var(--font-weight-semibold)' as any,
+                            color: getScoreColor(record.score),
+                            backgroundColor: 'var(--color-bg)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-md)',
+                            outline: 'none',
+                            textAlign: 'center',
+                            transition: 'border-color var(--duration-fast)',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = 'var(--color-accent)'; }}
+                          onBlur={(e) => { e.target.style.borderColor = 'var(--color-border)'; }}
                         />
-                        <span style={{ color: 'var(--color-fg-muted)' }}>/ {maxScore}</span>
+                        <span style={{
+                          color: 'var(--color-fg-subtle)',
+                          fontSize: 'var(--font-size-sm)',
+                          fontFamily: 'var(--font-mono)',
+                        }}>
+                          / {maxScore}
+                        </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border)' }}>
-                <Button onClick={handleSave} isLoading={isSaving} size="lg">
-                  Save Grades
+              {/* Save */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                padding: 'var(--space-5) var(--space-6)',
+                borderTop: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-subtle)',
+              }}>
+                <Button onClick={handleSave} isLoading={isSaving}
+                  style={{
+                    background: 'var(--color-accent-gradient)',
+                    border: 'none',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: '0 4px 12px rgb(99 102 241 / 0.3)',
+                    padding: 'var(--space-3) var(--space-8)',
+                  }}>
+                  💾 Save Grades
                 </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
       )}

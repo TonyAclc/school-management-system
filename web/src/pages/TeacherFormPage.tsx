@@ -79,36 +79,52 @@ export const TeacherFormPage = () => {
         <form onSubmit={onSubmit} noValidate>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <FormField label="First Name" htmlFor="firstName" error={errors.firstName?.message} required>
-              <Input id="firstName" placeholder="John" invalid={!!errors.firstName} {...register('firstName')} />
+              <Input id="firstName" invalid={!!errors.firstName} {...register('firstName')} />
             </FormField>
 
             <FormField label="Last Name" htmlFor="lastName" error={errors.lastName?.message} required>
-              <Input id="lastName" placeholder="Doe" invalid={!!errors.lastName} {...register('lastName')} />
+              <Input id="lastName" invalid={!!errors.lastName} {...register('lastName')} />
             </FormField>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <FormField label="Employee Number" htmlFor="employeeNumber" error={errors.employeeNumber?.message} required>
-              <Input id="employeeNumber" placeholder="TCH-2026-001" invalid={!!errors.employeeNumber} {...register('employeeNumber')} />
+              <Input id="employeeNumber" invalid={!!errors.employeeNumber} {...register('employeeNumber')} />
             </FormField>
 
             <FormField label="Department" htmlFor="department" error={errors.department?.message}>
-              <Input id="department" placeholder="Mathematics" invalid={!!errors.department} {...register('department')} />
+              <select
+                id="department"
+                {...register('department')}
+                style={{
+                  width: '100%',
+                  padding: 'var(--space-2) var(--space-3)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg)',
+                  fontSize: 'var(--font-size-md)',
+                  color: 'var(--color-fg)',
+                }}
+              >
+                <option value="">-- Select Department --</option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSBA">BSBA</option>
+              </select>
             </FormField>
           </div>
 
           <FormField label="Email" htmlFor="email" error={errors.email?.message} required>
-            <Input id="email" type="email" placeholder="john.doe@example.com" invalid={!!errors.email} {...register('email')} />
+            <Input id="email" type="email" invalid={!!errors.email} {...register('email')} />
           </FormField>
 
           {!isEditing && (
             <FormField label="Password" htmlFor="password" error={errors.password?.message} required>
-              <PasswordInput id="password" placeholder="••••••••" invalid={!!errors.password} {...register('password')} />
+              <PasswordInput id="password" invalid={!!errors.password} {...register('password')} />
             </FormField>
           )}
 
           <FormField label="Phone (Optional)" htmlFor="phone" error={errors.phone?.message}>
-            <Input id="phone" placeholder="+1234567890" invalid={!!errors.phone} {...register('phone')} />
+            <Input id="phone" invalid={!!errors.phone} {...register('phone')} />
           </FormField>
 
           <div style={{ marginTop: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>

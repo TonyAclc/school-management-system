@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   loadingText?: string;
@@ -23,19 +23,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // A primitive inline styling for now.
-    // In a full implementation we would use CSS modules or vanilla extract classes.
     const baseStyle: React.CSSProperties = {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 'var(--space-2)',
       borderRadius: 'var(--radius-md)',
       fontWeight: 'var(--font-weight-medium)',
+      fontFamily: 'var(--font-sans)',
       cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
       opacity: disabled || isLoading ? 0.6 : 1,
       width: fullWidth ? '100%' : 'auto',
-      transition: 'background-color var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast)',
+      transition: 'all var(--duration-fast) var(--easing-standard)',
       border: '1px solid transparent',
+      whiteSpace: 'nowrap',
+      letterSpacing: '0.01em',
       ...style,
     };
 
@@ -43,26 +45,34 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: {
         backgroundColor: 'var(--color-accent)',
         color: 'var(--color-accent-fg)',
+        boxShadow: 'var(--shadow-sm)',
       },
       secondary: {
-        backgroundColor: 'transparent',
+        backgroundColor: 'var(--color-bg-elevated)',
         color: 'var(--color-fg)',
-        border: '1px solid var(--color-bg-muted)',
+        border: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      outline: {
+        backgroundColor: 'transparent',
+        color: 'var(--color-accent)',
+        border: '1px solid var(--color-accent)',
       },
       danger: {
         backgroundColor: 'var(--color-danger)',
         color: 'white',
+        boxShadow: 'var(--shadow-sm)',
       },
       ghost: {
         backgroundColor: 'transparent',
-        color: 'var(--color-fg)',
+        color: 'var(--color-fg-muted)',
       },
     };
 
     const sizeStyles: Record<string, React.CSSProperties> = {
-      sm: { padding: 'var(--space-1) var(--space-2)', fontSize: 'var(--font-size-sm)' },
-      md: { padding: 'var(--space-2) var(--space-4)', fontSize: 'var(--font-size-base)' },
-      lg: { padding: 'var(--space-3) var(--space-6)', fontSize: 'var(--font-size-lg)' },
+      sm: { padding: '0.25rem 0.625rem', fontSize: 'var(--font-size-sm)' },
+      md: { padding: '0.5rem 1rem', fontSize: 'var(--font-size-sm)' },
+      lg: { padding: '0.625rem 1.5rem', fontSize: 'var(--font-size-base)' },
     };
 
     return (
@@ -72,7 +82,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{ ...baseStyle, ...variantStyles[variant], ...sizeStyles[size] }}
         {...props}
       >
-        {isLoading ? (loadingText || 'Loading...') : children}
+        {isLoading ? (loadingText || '⏳ Loading...') : children}
       </button>
     );
   }
