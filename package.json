@@ -1,0 +1,13 @@
+{
+  "name": "school-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix web\"",
+    "build": "npm run build --prefix api && npm run build --prefix web",
+    "install:all": "npm install && npm install --prefix api && npm install --prefix web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

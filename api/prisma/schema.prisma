@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+  STAFF
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EXCUSED
+}
+
+model User {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  email        String    @unique @db.VarChar(254)
+  passwordHash String
+  firstName    String    @db.VarChar(100)
+  lastName     String    @db.VarChar(100)
+  phone        String?   @db.VarChar(32)
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
+  student       Student?
+  teacher       Teacher?
+
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Role {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  name      RoleName  @unique
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  users     UserRole[]
+
+  @@index([deletedAt])
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([deletedAt])
+  @@map("user_roles")
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  tokenHash    String    @unique @db.VarChar(255)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Uuid
+  userId       String    @db.Uuid
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedBy   RefreshToken? @relation("TokenReplacement", fields: [replacedById], references: [id])
+  replacements RefreshToken[] @relation("TokenReplacement")
+
+  @@index([deletedAt])
+  @@map("refresh_tokens")
+}
+
+model Student {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  studentNumber String    @unique @db.VarChar(50)
+  guardianName  String?   @db.VarChar(100)
+  guardianPhone String?   @db.VarChar(32)
+  guardianEmail String?   @db.VarChar(254)
+  userId        String    @unique @db.Uuid
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  attendances Attendance[]
+  grades      Grade[]
+
+  @@index([deletedAt])
+  @@map("students")
+}
+
+model Teacher {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  employeeNumber String    @unique @db.VarChar(50)
+  department     String?   @db.VarChar(100)
+  userId         String    @unique @db.Uuid
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes        Class[]
+  subjects       Subject[]
+
+  @@index([deletedAt])
+  @@map("teachers")
+}
+
+model Class {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  gradeLevel        String    @db.VarChar(50)
+  academicYear      String    @db.VarChar(20)
+  homeroomTeacherId String?   @db.Uuid
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  homeroomTeacher Teacher?     @relation(fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  enrollments     Enrollment[]
+  attendances     Attendance[]
+
+  @@index([deletedAt])
+  @@map("classes")
+}
+
+model Subject {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  code      String    @unique @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  teacherId String?   @db.Uuid
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  grades  Grade[]
+
+  @@index([deletedAt])
+  @@map("subjects")
+}
+
+model Enrollment {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  studentId    String    @db.Uuid
+  classId      String    @db.Uuid
+  academicYear String    @db.VarChar(20)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId, academicYear])
+  @@index([deletedAt])
+  @@map("enrollments")
+}
+
+model Attendance {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  studentId String           @db.Uuid
+  classId   String           @db.Uuid
+  date      DateTime         @db.Date
+  status    AttendanceStatus
+  notes     String?          @db.Text
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId, date])
+  @@index([classId, date])
+  @@index([deletedAt])
+  @@map("attendances")
+}
+
+model Grade {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  studentId    String    @db.Uuid
+  subjectId    String    @db.Uuid
+  term         String    @db.VarChar(20)
+  academicYear String    @db.VarChar(20)
+  score        Decimal   @db.Decimal(5, 2)
+  maxScore     Decimal   @db.Decimal(5, 2)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subjectId, term, academicYear])
+  @@index([studentId, subjectId, term, academicYear])
+  @@index([deletedAt])
+  @@map("grades")
+}
+
+model IdempotencyKey {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  key       String   @unique @db.VarChar(128)
+  createdAt DateTime @default(now())
+
+  @@map("idempotency_keys")
+}
