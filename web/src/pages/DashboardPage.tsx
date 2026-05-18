@@ -235,7 +235,7 @@ export const DashboardPage = () => {
       }}>
         <StatCard
           title="Total Users"
-          value={usersData?.total ?? '—'}
+          value={usersData?.totalCount ?? '—'}
           icon="👥"
           gradient="linear-gradient(135deg, #6366f1, #8b5cf6)"
           shadowColor="rgb(99 102 241 / 0.25)"
@@ -244,7 +244,7 @@ export const DashboardPage = () => {
         />
         <StatCard
           title="Teachers"
-          value={teachersData?.total ?? '—'}
+          value={teachersData?.totalCount ?? '—'}
           icon="🎓"
           gradient="linear-gradient(135deg, #10b981, #34d399)"
           shadowColor="rgb(16 185 129 / 0.25)"
@@ -253,8 +253,8 @@ export const DashboardPage = () => {
         />
         <StatCard
           title="Students"
-          value={studentsData?.total ?? '—'}
-          icon="🧑‍🎓"
+          value={studentsData?.totalCount ?? '—'}
+          icon="👦"
           gradient="linear-gradient(135deg, #f59e0b, #fbbf24)"
           shadowColor="rgb(245 158 11 / 0.25)"
           onClick={() => navigate('/students')}
@@ -262,7 +262,7 @@ export const DashboardPage = () => {
         />
         <StatCard
           title="Classes"
-          value={classesData?.total ?? '—'}
+          value={classesData?.totalCount ?? '—'}
           icon="🏫"
           gradient="linear-gradient(135deg, #3b82f6, #60a5fa)"
           shadowColor="rgb(59 130 246 / 0.25)"

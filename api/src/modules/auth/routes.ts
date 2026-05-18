@@ -13,22 +13,28 @@ import {
 
 export const authRouter = Router();
 
+const getMessage = (req: any, options: any) => {
+  const msLeft = req.rateLimit?.resetTime ? req.rateLimit.resetTime.getTime() - Date.now() : options.windowMs;
+  const mins = Math.max(1, Math.ceil(msLeft / 60000));
+  return `Too many requests. Please wait ${mins} minute${mins === 1 ? '' : 's'} before trying again.`;
+};
+
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 3 * 60 * 1000,
   limit: 5,
-  handler: (_, __, next) => next(new TooManyRequestsError()),
+  handler: (req, res, next, options) => next(new TooManyRequestsError(getMessage(req, options))),
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 3,
-  handler: (_, __, next) => next(new TooManyRequestsError()),
+  handler: (req, res, next, options) => next(new TooManyRequestsError(getMessage(req, options))),
 });
 
 const refreshLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 30,
-  handler: (_, __, next) => next(new TooManyRequestsError()),
+  handler: (req, res, next, options) => next(new TooManyRequestsError(getMessage(req, options))),
 });
 
 authRouter.post('/register', registerLimiter, validate({ body: registerBodySchema }), authController.register);

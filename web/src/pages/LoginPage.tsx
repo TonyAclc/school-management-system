@@ -64,7 +64,7 @@ export const LoginPage = () => {
             boxShadow: '0 8px 24px rgb(99 102 241 / 0.35)',
             marginBottom: 'var(--space-4)',
           }}>
-            E
+            SMS
           </div>
           <h1 style={{
             fontSize: 'var(--font-size-2xl)',
@@ -78,7 +78,7 @@ export const LoginPage = () => {
             color: 'var(--color-fg-muted)',
             fontSize: 'var(--font-size-sm)',
           }}>
-            Sign in to EduManage to continue
+            Sign in to SchoolManagement to continue
           </p>
         </div>
 

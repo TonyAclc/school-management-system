@@ -107,7 +107,7 @@ export const StudentsListPage = () => {
         title="Students"
         subtitle="Manage student records, enrollment, and academic information"
         icon="👦"
-        count={data?.total}
+        count={data?.totalCount}
         actions={
           <Button onClick={() => navigate('/students/new')}
             style={{ background: 'var(--color-accent-gradient)', border: 'none', boxShadow: '0 4px 12px rgb(99 102 241 / 0.3)' }}>

@@ -10,6 +10,7 @@ import { requestId } from './shared/middleware/request-id';
 import { httpLogger } from './shared/middleware/http-logger';
 import { notFoundHandler } from './shared/middleware/not-found';
 import { errorHandler } from './shared/middleware/error-handler';
+import { TooManyRequestsError } from './shared/errors/app-error';
 
 // Import routers later
 import { authRouter } from './modules/auth/routes';
@@ -52,6 +53,11 @@ export const createApp = (): Application => {
     limit: env.RATE_LIMIT_MAX,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
+    handler: (req, res, next, options) => {
+      const msLeft = (req as any).rateLimit?.resetTime ? (req as any).rateLimit.resetTime.getTime() - Date.now() : options.windowMs;
+      const mins = Math.max(1, Math.ceil(msLeft / 60000));
+      next(new TooManyRequestsError(`Too many requests. Please wait ${mins} minute${mins === 1 ? '' : 's'} before trying again.`));
+    }
   }));
 
   // 8. Health endpoints

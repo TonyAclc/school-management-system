@@ -132,7 +132,7 @@ export const ClassesListPage = () => {
         title="Classes"
         subtitle="Organize course sections, assign advisers, and manage enrollment"
         icon="🏫"
-        count={data?.total}
+        count={data?.totalCount}
         actions={
           <Button onClick={() => navigate('/classes/new')}
             style={{ background: 'var(--color-accent-gradient)', border: 'none', boxShadow: '0 4px 12px rgb(99 102 241 / 0.3)' }}>

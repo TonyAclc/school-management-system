@@ -7,8 +7,10 @@ import { env } from '../../config/env';
 
 const normalizePrismaError = (err: Prisma.PrismaClientKnownRequestError): AppError => {
   switch (err.code) {
-    case 'P2002':
-      return new ConflictError('Unique constraint violation', { target: err.meta?.target });
+    case 'P2002': {
+      const target = Array.isArray(err.meta?.target) ? err.meta.target.join(', ') : (err.meta?.target || 'value');
+      return new ConflictError(`This ${target} is already in use`, { target: err.meta?.target });
+    }
     case 'P2003':
       return new ConflictError('Foreign key constraint violation');
     case 'P2025':

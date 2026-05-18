@@ -81,7 +81,7 @@ export const AppShell = () => {
             color: 'white',
             boxShadow: '0 4px 12px rgb(129 140 248 / 0.4)',
           }}>
-            E
+            SMS
           </div>
           <div>
             <div style={{
@@ -90,7 +90,7 @@ export const AppShell = () => {
               color: 'white',
               letterSpacing: '-0.02em',
             }}>
-              EduManage
+              SchoolManagement
             </div>
             <div style={{
               fontSize: '0.6875rem',

@@ -155,7 +155,7 @@ export const UsersListPage = () => {
         title="Users"
         subtitle="Manage all system users, roles, and access permissions"
         icon="👥"
-        count={data?.total}
+        count={data?.totalCount}
         actions={
           <Button onClick={() => navigate('/users/new')}
             style={{ background: 'var(--color-accent-gradient)', border: 'none', boxShadow: '0 4px 12px rgb(99 102 241 / 0.3)' }}>

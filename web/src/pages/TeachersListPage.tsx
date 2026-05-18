@@ -116,7 +116,7 @@ export const TeachersListPage = () => {
         title="Teachers"
         subtitle="Manage faculty members, departments, and assignments"
         icon="🎓"
-        count={data?.total}
+        count={data?.totalCount}
         actions={
           <Button onClick={() => navigate('/teachers/new')}
             style={{ background: 'var(--color-accent-gradient)', border: 'none', boxShadow: '0 4px 12px rgb(99 102 241 / 0.3)' }}>
